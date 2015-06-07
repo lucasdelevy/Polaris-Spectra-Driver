@@ -39,8 +39,10 @@ Polaris Spectra API for Ubuntu 12.04 LTS, tested only on revision G001.005
 #                                IMPORTS
 ##############################################################################
 import serial
-#import time
 import struct
+
+import sys
+from select import select as sel
 
 ##############################################################################
 #                                AUTHORSHIP
@@ -57,59 +59,72 @@ __license__ = "LGPL"
 def main():
 
   # Initialize PolarisDriver object
-  polaris_driver = PolarisDriver(port='/dev/ttyUSB0')  
+  polaris_driver = PolarisDriver(port='/dev/ttyUSB1')  
 
   print 'Opening serial port...'
   polaris_driver.open()
   print 'Serial port OK.'
 
-  #print '\nTry to change serial parameters...'
-  #polaris_driver.comm('4','0','0','0','0')
-  #time.sleep(1)
-  #polaris_driver.serial.baudrate = 57600
-
-  print '\nInitializing system...'
-  print '\nRequesting APIREV...'
   print polaris_driver._apirev()
+  print polaris_driver._ver("4")
+  print polaris_driver._comm("7", "0", "0", "0", "1")
+  print polaris_driver._ver("5")
+  print polaris_driver._getinfo("Config.*")
+  print polaris_driver._get("Device.*")
+  print polaris_driver._init()
+  print polaris_driver._phsr("00")
+  print polaris_driver._getinfo("Param.Tracking.*")
+  print polaris_driver._getinfo("Features.Firmware.Version")
+  print polaris_driver._getinfo("Info.Status.Alerts")
+  print polaris_driver._getinfo("Info.Status.New Alerts")
+  print polaris_driver._getinfo("Features.Hardware.Serial Number")
+  print polaris_driver._ver("4")
+  print polaris_driver._getinfo("Features.Tools.*")
+  print polaris_driver._sflist("03")
+  print polaris_driver._getinfo("Param.Tracking.Selected Volume")
+  print polaris_driver._getinfo("SCU-0.Info.Status.New Alerts")
+  print polaris_driver._getinfo("SCU-0.Info.Status.Alerts")
+  print polaris_driver._phinf("01","0075")
+  print polaris_driver._getinfo("Info.Status.New Alerts")
+  print polaris_driver._getinfo("Info.Status.Alerts")
+  print polaris_driver._getinfo("STB-0.Info.Status.New Alerts")
+  print polaris_driver._getinfo("STB-0.Info.Status.Alerts")
+  print polaris_driver._tstart('80')
 
-  print '\nRequesting number of active tool ports'
-  response = polaris_driver._sflist('01')
-  print response[:1]
+  print polaris_driver.getPositionFromBX("1801")
+  # print polaris_driver._bx('1801')
 
-  try:
-    polaris_driver.init()
-  except CommandError as e:
-    print 'Error initalizing, exiting...'
-    print e
-    polaris_driver.close()
-    return
+  print polaris_driver._tstop()
+  print polaris_driver._set("PS-0.Param.Tracking.Illuminator Rate","2")
+  print polaris_driver._phrq("********", "*", "1", "****")
+  print polaris_driver._pvwr("02", "0000", "4E444900D2110000010000000000000100000000031480345A00000004000000040000000000403F000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "0040", "00002041000000000000000000000000000000000000000052B8E4417B14244200000000000000000000B04200000000AE4731C2CDCC21420000000000000000") 
+  print polaris_driver._pvwr("02", "0080", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "00C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "0100", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000803F00000000") 
+  print polaris_driver._pvwr("02", "0140", "000000000000803F00000000000000000000803F00000000000000000000803F0000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "0180", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "01C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "0200", "0000000000000000000000000000000000000000000000000000000000000000000000000000000000010203000000000000000000000000000000001F1F1F1F") 
+  print polaris_driver._pvwr("02", "0240", "090000004E4449000000000000000000383730303333390000000000000000000000000009010101010000000000000000000000000000000001010101000000") 
+  print polaris_driver._pvwr("02", "0280", "000000000000000000000000008000290000000000000000000080BF000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pvwr("02", "02C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+  print polaris_driver._pinit("02")
+  print polaris_driver._phinf("02", "0075") 
+  print polaris_driver._tstart('80')
+  print polaris_driver._bx('1803')
+  print polaris_driver._tstop()
+  print polaris_driver._pena("02", "D")
+  print polaris_driver._tstart('80')
 
-  print '\nObtaining PortHandles...'
-  try:
-    polaris_driver.assignPortHandleAll()
-  except CommandError as e:
-    print e
-    polaris_driver.close()
-    return
-  print polaris_driver.port_handler
+  while True:
+    rlist, _, _, = sel([sys.stdin],[],[],0.1)    
+    if rlist:
+      break
 
-  print '\nInitializing PortHandles...'
-  polaris_driver.initPortHandleAll()
-  print polaris_driver.port_handler
-
-  print '\nEnabling tool porthandle...'
-  print polaris_driver.enablePortHandle(polaris_driver.port_handler.handles[1],polaris_driver.PENA_TTPRIO_DYNAMIC)
-  print polaris_driver.enablePortHandle(polaris_driver.port_handler.handles[2],polaris_driver.PENA_TTPRIO_DYNAMIC)
-  print polaris_driver.port_handler
-
-  print '\nStarting tracking mode...'
-  polaris_driver.startTracking(polaris_driver.TSTART_RESET_FRAMECOUNT)
-  print 'Tracking mode started successfully.'
-
-  for i in range(10):
-    print polaris_driver.getToolTransformations()
-    polaris_driver._beep(1)
-    print ''
+    # print polaris_driver.getToolTransformations()
+    print polaris_driver.getPositionFromBX("1801")
+    # print polaris_driver._bx('1803') + '\n'
 
   print '\nStop tracking mode...'
   polaris_driver.stopTracking()
@@ -190,7 +205,6 @@ class Tool:
     self.trans.x=x
     self.trans.y=y
     self.trans.z=z
-    
 
 class Translation:
   def __init__(self,x=0.0,y=0.0,z=0.0):
@@ -271,6 +285,42 @@ class PolarisDriver:
 
   def stopTracking(self):
     return self._tstop()
+
+  def getPositionFromBX(self, reply_option):
+    bx_data = self._bx(reply_option).encode('hex')
+    print bx_data
+    bx_data = bx_data[43:67]
+
+    def stringSwap(str_to_swap):
+      '''Method used to swap the data endian'''
+      size = len(str_to_swap)/2
+      ret_str = ''
+      for i in range(size):
+        ret_str = str_to_swap[:2] + ret_str
+        str_to_swap = str_to_swap[2:]
+      return ret_str
+
+    if(len(bx_data[:8]) > 0):
+      x = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    else:
+      x = 'miss'
+    bx_data = bx_data[8:]
+
+    if(len(bx_data[:8]) > 0):
+      y = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    else:
+      y = 'miss'
+    bx_data = bx_data[8:]
+
+    if(len(bx_data[:8]) > 0):
+      z = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    else:
+      z = 'miss'
+    bx_data = bx_data[8:]
+
+    pos = [x, y, z]
+
+    return pos
 
   def getToolTransformations(self):
 
@@ -413,24 +463,12 @@ class PolarisDriver:
   def _bx(self, reply_option):
     self.serial.write('BX '+str(reply_option)+'\r')
 
-    # This method requires a different readline
-    string = self.serial.read(2)
-    encoded = string.encode('hex')
-    # Verify if the start sequence is alright
-    if encoded != 'c4a5':
-      print encoded
-      print 'Error in _bx function'
-    # Get reply length
-    string = self.serial.read(2)
-    encoded = string.encode('hex')
-    reply_len = int(encoded,16)
-    # Get CRC header
-    string = self.serial.read(2)
-    # Get Response
-    response = self.serial.read(reply_len).encode('hex')
-    # Get CRC
-    string = self.serial.read(2)
-    return response
+    start_sqn = self.serial.read(64)
+    pos = self.serial.read(24)
+    crc = self.serial.read(8)
+    # print start_sqn + pos + crc
+    return start_sqn + pos + crc
+
 
   def _comm(self, baud_rate, data_bits, parity, stop_bits, hardware_handshaking):
     self.serial.write('COMM '+str(baud_rate)+str(data_bits)+str(parity)+str(stop_bits)+str(hardware_handshaking)+'\r')
