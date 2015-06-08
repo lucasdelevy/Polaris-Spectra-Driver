@@ -66,66 +66,19 @@ def main():
   print 'Serial port OK.'
 
   print polaris_driver._apirev()
-  print polaris_driver._ver("4")
-  print polaris_driver._comm("7", "0", "0", "0", "1")
-  print polaris_driver._ver("5")
-  print polaris_driver._getinfo("Config.*")
-  print polaris_driver._get("Device.*")
-  print polaris_driver._init()
-  print polaris_driver._phsr("00")
-  print polaris_driver._getinfo("Param.Tracking.*")
-  print polaris_driver._getinfo("Features.Firmware.Version")
-  print polaris_driver._getinfo("Info.Status.Alerts")
-  print polaris_driver._getinfo("Info.Status.New Alerts")
-  print polaris_driver._getinfo("Features.Hardware.Serial Number")
-  print polaris_driver._ver("4")
-  print polaris_driver._getinfo("Features.Tools.*")
-  print polaris_driver._sflist("03")
-  print polaris_driver._getinfo("Param.Tracking.Selected Volume")
-  print polaris_driver._getinfo("SCU-0.Info.Status.New Alerts")
-  print polaris_driver._getinfo("SCU-0.Info.Status.Alerts")
-  print polaris_driver._phinf("01","0075")
-  print polaris_driver._getinfo("Info.Status.New Alerts")
-  print polaris_driver._getinfo("Info.Status.Alerts")
-  print polaris_driver._getinfo("STB-0.Info.Status.New Alerts")
-  print polaris_driver._getinfo("STB-0.Info.Status.Alerts")
-  print polaris_driver._tstart('80')
 
-  print polaris_driver.getPositionFromBX("1801")
-
-  print polaris_driver._tstop()
-  print polaris_driver._set("PS-0.Param.Tracking.Illuminator Rate","2")
-  print polaris_driver._phrq("********", "*", "1", "****")
-  print polaris_driver._pvwr("02", "0000", "4E444900D2110000010000000000000100000000031480345A00000004000000040000000000403F000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "0040", "00002041000000000000000000000000000000000000000052B8E4417B14244200000000000000000000B04200000000AE4731C2CDCC21420000000000000000") 
-  print polaris_driver._pvwr("02", "0080", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "00C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "0100", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000803F00000000") 
-  print polaris_driver._pvwr("02", "0140", "000000000000803F00000000000000000000803F00000000000000000000803F0000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "0180", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "01C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "0200", "0000000000000000000000000000000000000000000000000000000000000000000000000000000000010203000000000000000000000000000000001F1F1F1F") 
-  print polaris_driver._pvwr("02", "0240", "090000004E4449000000000000000000383730303333390000000000000000000000000009010101010000000000000000000000000000000001010101000000") 
-  print polaris_driver._pvwr("02", "0280", "000000000000000000000000008000290000000000000000000080BF000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pvwr("02", "02C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
-  print polaris_driver._pinit("02")
-  print polaris_driver._phinf("02", "0075") 
-  print polaris_driver._tstart('80')
-  print polaris_driver.getPositionFromBX('1803')
-  print polaris_driver._tstop()
-  print polaris_driver._pena("02", "D")
-  print polaris_driver._tstart('80')
+  polaris_driver.initStrayMarkerTracker()
 
   while True:
-    rlist, _, _, = sel([sys.stdin],[],[],0.1)    
-    if rlist:
-      break
+      rlist, _, _, = sel([sys.stdin],[],[],0.01)    
+      if rlist:
+        break
 
-    print polaris_driver.getPositionFromBX("1801")
+      print polaris_driver.getPositionFromBX("1801")
 
   print '\nStop tracking mode...'
   polaris_driver.stopTracking()
-  print 'Tracking mode started successfully.'
+  print 'Tracking mode started successfully.'    
 
   print 'Closing serial port...'
   polaris_driver.close()
@@ -691,7 +644,128 @@ class PolarisDriver:
     elif response[:5] == 'RESET':
       raise CommandError(command,'01')
     else:
-      return    
+      return
+
+  #######################
+  #  HIGHER LEVEL FUNCTION
+  #######################
+
+  def initStrayMarkerTracker(self):
+    verbose = False
+    if verbose == True:
+      print self._ver("4")
+      print self._comm("7", "0", "0", "0", "1")
+      print self._ver("5")
+      print self._getinfo("Config.*")
+      print self._get("Device.*")
+      print self._init()
+      print self._phsr("00")
+      print self._getinfo("Param.Tracking.*")
+      print self._getinfo("Features.Firmware.Version")
+      print self._getinfo("Info.Status.Alerts")
+      print self._getinfo("Info.Status.New Alerts")
+      print self._getinfo("Features.Hardware.Serial Number")
+      print self._ver("4")
+      print self._getinfo("Features.Tools.*")
+      print self._sflist("03")
+      print self._getinfo("Param.Tracking.Selected Volume")
+      print self._getinfo("SCU-0.Info.Status.New Alerts")
+      print self._getinfo("SCU-0.Info.Status.Alerts")
+      print self._phinf("01","0075")
+      print self._getinfo("Info.Status.New Alerts")
+      print self._getinfo("Info.Status.Alerts")
+      print self._getinfo("STB-0.Info.Status.New Alerts")
+      print self._getinfo("STB-0.Info.Status.Alerts")
+
+      print self._tstart('80')
+      print self.getPositionFromBX("1801")
+      print self._tstop()
+
+      print self._set("PS-0.Param.Tracking.Illuminator Rate","2")
+      print self._phrq("********", "*", "1", "****")
+      print self._pvwr("02", "0000", "4E444900D2110000010000000000000100000000031480345A00000004000000040000000000403F000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "0040", "00002041000000000000000000000000000000000000000052B8E4417B14244200000000000000000000B04200000000AE4731C2CDCC21420000000000000000") 
+      print self._pvwr("02", "0080", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "00C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "0100", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000803F00000000") 
+      print self._pvwr("02", "0140", "000000000000803F00000000000000000000803F00000000000000000000803F0000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "0180", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "01C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "0200", "0000000000000000000000000000000000000000000000000000000000000000000000000000000000010203000000000000000000000000000000001F1F1F1F") 
+      print self._pvwr("02", "0240", "090000004E4449000000000000000000383730303333390000000000000000000000000009010101010000000000000000000000000000000001010101000000") 
+      print self._pvwr("02", "0280", "000000000000000000000000008000290000000000000000000080BF000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pvwr("02", "02C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      print self._pinit("02")
+      print self._phinf("02", "0075")
+
+      print self._tstart('80')
+      print self.getPositionFromBX('1803')
+      print self._tstop()
+
+      print self._pena("02", "D")
+
+      print self._tstart('80')
+    else:
+      print "Restarting system..."
+      self._ver("4")
+      self._comm("7", "0", "0", "0", "1")
+      self._ver("5")
+      self._getinfo("Config.*")
+      self._get("Device.*")
+
+      print "Starting system..."
+      self._init()
+      self._phsr("00")
+      self._getinfo("Param.Tracking.*")
+      self._getinfo("Features.Firmware.Version")
+      self._getinfo("Info.Status.Alerts")
+      self._getinfo("Info.Status.New Alerts")
+      self._getinfo("Features.Hardware.Serial Number")
+      self._ver("4")
+      self._getinfo("Features.Tools.*")
+      self._sflist("03")
+      self._getinfo("Param.Tracking.Selected Volume")
+      self._getinfo("SCU-0.Info.Status.New Alerts")
+      self._getinfo("SCU-0.Info.Status.Alerts")
+      self._phinf("01","0075")
+      self._getinfo("Info.Status.New Alerts")
+      self._getinfo("Info.Status.Alerts")
+      self._getinfo("STB-0.Info.Status.New Alerts")
+      self._getinfo("STB-0.Info.Status.Alerts")
+      
+      print "Starting passive tool handle..."
+      self._tstart('80')
+      self.getPositionFromBX("1801")
+      self._tstop()
+
+      self._set("PS-0.Param.Tracking.Illuminator Rate","2")
+      self._phrq("********", "*", "1", "****")
+      self._pvwr("02", "0000", "4E444900D2110000010000000000000100000000031480345A00000004000000040000000000403F000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "0040", "00002041000000000000000000000000000000000000000052B8E4417B14244200000000000000000000B04200000000AE4731C2CDCC21420000000000000000") 
+      self._pvwr("02", "0080", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "00C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "0100", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000803F00000000") 
+      self._pvwr("02", "0140", "000000000000803F00000000000000000000803F00000000000000000000803F0000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "0180", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "01C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "0200", "0000000000000000000000000000000000000000000000000000000000000000000000000000000000010203000000000000000000000000000000001F1F1F1F") 
+      self._pvwr("02", "0240", "090000004E4449000000000000000000383730303333390000000000000000000000000009010101010000000000000000000000000000000001010101000000") 
+      self._pvwr("02", "0280", "000000000000000000000000008000290000000000000000000080BF000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pvwr("02", "02C0", "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000") 
+      self._pinit("02")
+      self._phinf("02", "0075") 
+
+      print "Enabling tool..."
+      self._tstart('80')
+      self.getPositionFromBX('1803')
+      self._tstop()
+
+      self._pena("02", "D")
+
+      print "Start!"
+      self._tstart('80')
+
+    return
 
 
 ##############################################################################
