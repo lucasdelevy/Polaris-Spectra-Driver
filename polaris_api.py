@@ -92,7 +92,6 @@ def main():
   print polaris_driver._tstart('80')
 
   print polaris_driver.getPositionFromBX("1801")
-  # print polaris_driver._bx('1801')
 
   print polaris_driver._tstop()
   print polaris_driver._set("PS-0.Param.Tracking.Illuminator Rate","2")
@@ -112,7 +111,7 @@ def main():
   print polaris_driver._pinit("02")
   print polaris_driver._phinf("02", "0075") 
   print polaris_driver._tstart('80')
-  print polaris_driver._bx('1803')
+  print polaris_driver.getPositionFromBX('1803')
   print polaris_driver._tstop()
   print polaris_driver._pena("02", "D")
   print polaris_driver._tstart('80')
@@ -122,9 +121,7 @@ def main():
     if rlist:
       break
 
-    # print polaris_driver.getToolTransformations()
     print polaris_driver.getPositionFromBX("1801")
-    # print polaris_driver._bx('1803') + '\n'
 
   print '\nStop tracking mode...'
   polaris_driver.stopTracking()
@@ -287,9 +284,9 @@ class PolarisDriver:
     return self._tstop()
 
   def getPositionFromBX(self, reply_option):
-    bx_data = self._bx(reply_option).encode('hex')
-    print bx_data
-    bx_data = bx_data[43:67]
+    bx_data = self.BX(reply_option).encode('hex')
+    # print bx_data
+    bx_data = bx_data[42:66]
 
     def stringSwap(str_to_swap):
       '''Method used to swap the data endian'''
@@ -300,23 +297,27 @@ class PolarisDriver:
         str_to_swap = str_to_swap[2:]
       return ret_str
 
-    if(len(bx_data[:8]) > 0):
-      x = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    x_str = bx_data[:8]
+    bx_data = bx_data[8:]
+    y_str = bx_data[:8]
+    bx_data = bx_data[8:]
+    z_str = bx_data[:8]
+    bx_data = bx_data[8:]
+
+    if(len(x_str) > 7):
+      x = struct.unpack("!f",stringSwap(x_str[:8]).decode('hex'))[0]
     else:
       x = 'miss'
-    bx_data = bx_data[8:]
 
-    if(len(bx_data[:8]) > 0):
-      y = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    if(len(y_str) > 7):
+      y = struct.unpack("!f",stringSwap(y_str[:8]).decode('hex'))[0]
     else:
       y = 'miss'
-    bx_data = bx_data[8:]
 
-    if(len(bx_data[:8]) > 0):
-      z = struct.unpack("!f",stringSwap(bx_data[:8]).decode('hex'))[0]
+    if(len(z_str) > 7):
+      z = struct.unpack("!f",stringSwap(z_str[:8]).decode('hex'))[0]
     else:
       z = 'miss'
-    bx_data = bx_data[8:]
 
     pos = [x, y, z]
 
@@ -463,12 +464,33 @@ class PolarisDriver:
   def _bx(self, reply_option):
     self.serial.write('BX '+str(reply_option)+'\r')
 
+    # This method requires a different readline
+    string = self.serial.read(2)
+    encoded = string.encode('hex')
+    # Verify if the start sequence is alright
+    if encoded != 'c4a5':
+      print encoded
+      print 'Error in _bx function'
+    # Get reply length
+    string = self.serial.read(2)
+    encoded = string.encode('hex')
+    reply_len = int(encoded,16)
+    # Get CRC header
+    string = self.serial.read(2)
+    # Get Response
+    response = self.serial.read(reply_len).encode('hex')
+    # Get CRC
+    string = self.serial.read(2)
+    return response
+
+  def BX(self, reply_option):
+    self.serial.write('BX '+str(reply_option)+'\r')
+
     start_sqn = self.serial.read(64)
     pos = self.serial.read(24)
     crc = self.serial.read(8)
     # print start_sqn + pos + crc
     return start_sqn + pos + crc
-
 
   def _comm(self, baud_rate, data_bits, parity, stop_bits, hardware_handshaking):
     self.serial.write('COMM '+str(baud_rate)+str(data_bits)+str(parity)+str(stop_bits)+str(hardware_handshaking)+'\r')
